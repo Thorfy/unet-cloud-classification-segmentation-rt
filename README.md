@@ -1,6 +1,6 @@
-# cloud-net-rfdetr
+# U-Net Cloud Classification and Segmentation RT
 
-Types de nuages + segmentation sémantique + instances, en quasi temps réel, sur **Meteosat Europe** (et GOES-19).
+Classification et segmentation de types de nuages en quasi temps réel, sur **Meteosat Europe** (et GOES-19).
 
 Le live utilise un **U-Net** entraîné sur les produits officiels **GOES-19** (truecolor CMI + phase ACTP + épaisseur COD + hauteur ACHA), puis fine-tuné sur **Meteosat Europe** ([MET Norway](https://api.met.no/weatherapi/geosatellite/1.4/documentation)).
 
@@ -42,7 +42,8 @@ Un premier essai RF-DETR-Seg sur 38/95-Cloud (binaire, instances Landsat) ne se 
 ## Installation
 
 ```powershell
-cd C:\Users\Remy\cloud-net-rfdetr
+git clone https://github.com/Thorfy/unet-cloud-classification-segmentation-rt.git
+cd unet-cloud-classification-segmentation-rt
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt

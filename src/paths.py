@@ -12,7 +12,7 @@ EUROPE_SEG_DIR = DATA_DIR / "europe_seg"
 RUNS_DIR = ROOT / "runs"
 WEIGHTS_DIR = ROOT / "weights"
 KAGGLE_TOKEN = Path.home() / ".kaggle" / "kaggle.json"
-USER_AGENT = "cloud-net-rfdetr/1.0 (educational cloud detection; local project)"
+USER_AGENT = "unet-cloud-classif-seg-rt/1.0 (educational cloud detection)"
 
 
 def ensure_dirs() -> Path:

@@ -142,6 +142,16 @@ def cloud_fraction(mask: np.ndarray) -> float:
     return float(sum(fr[CLASSES[i][0]] for i in CLOUD_IDS))
 
 
+def filter_mask(mask: np.ndarray, enabled_ids: set[int] | None) -> np.ndarray:
+    """Masque les types desactives (pixels -> 0 / clair pour l'affichage)."""
+    out = np.asarray(mask).copy()
+    if enabled_ids is None:
+        return out
+    keep = np.isin(out, list(enabled_ids)) | (out == IGNORE)
+    out[~keep] = 0
+    return out
+
+
 def overlay_types(rgb: np.ndarray, mask: np.ndarray, opacity: float = 0.45) -> np.ndarray:
     base = np.asarray(rgb)
     if base.ndim == 2:
