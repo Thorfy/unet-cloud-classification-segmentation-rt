@@ -1,0 +1,18 @@
+# Dashboard + U-Net
+torch
+torchvision
+numpy
+pillow
+opencv-python
+streamlit
+requests
+netCDF4
+tqdm
+
+# Optionnel: pipeline Landsat 38/95-Cloud + RF-DETR
+rfdetr[train]
+kaggle
+huggingface_hub
+datasets
+supervision
+tifffile

@@ -1,0 +1,57 @@
+﻿# Environnements
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Donnees locales (Landsat, GOES netCDF, tuiles, caches live)
+data/
+*.nc
+*.tif
+*.tiff
+*.jp2
+*.hdf
+*.h5
+
+# Poids et runs d'entrainement (fichiers lourds)
+runs/
+weights/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.safetensors
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Secrets et config locale
+.env
+.env.*
+kaggle.json
+.kaggle/
+*.log
+
+# Streamlit local (on versionne uniquement un exemple)
+.streamlit/*
+!.streamlit/config.toml.example
+
+# OS / IDE
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/
+*.swp
