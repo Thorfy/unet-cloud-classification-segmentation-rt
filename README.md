@@ -1,88 +1,92 @@
 # U-Net Cloud Classification and Segmentation RT
 
-Classification et segmentation de types de nuages en quasi temps réel, sur **Meteosat Europe** (et GOES-19).
+Near-real-time cloud type classification and semantic segmentation on **Meteosat Europe** and **GOES-19**.
 
-Le live utilise un **U-Net** entraîné sur les produits officiels **GOES-19** (truecolor CMI + phase ACTP + épaisseur COD + hauteur ACHA), puis fine-tuné sur **Meteosat Europe** ([MET Norway](https://api.met.no/weatherapi/geosatellite/1.4/documentation)).
-
-Les instances sont obtenues par composantes connexes **par type** (pas un détecteur d’objets séparé).
+A compact U-Net is trained on official GOES-19 products (CMI truecolor, ACTP phase, COD optical depth, ACHA height), then fine-tuned on [MET Norway](https://api.met.no/weatherapi/geosatellite/1.4/documentation) Meteosat Europe imagery. Instance boxes are connected components per class, not a separate object detector.
 
 <p align="center">
-  <img src="docs/screenshots/dashboard-europe-instances.png" alt="Dashboard live Europe" width="100%">
+  <img src="docs/screenshots/dashboard-europe-instances.png" alt="Live Europe dashboard" width="100%">
 </p>
 
-## Types
+## Cloud types
 
-| Classe | Signification |
+| Class | Meaning |
 |---|---|
-| Brouillard / très bas | sommet < 1 km |
-| Nuages bas | St / Sc / Cu |
-| Nuages moyens | Ac / As |
-| Phase mixte | eau + glace |
-| Hauts opaques | Cs / Ns |
-| Très hauts / convectif | Cb |
-| Cirrus très mince / cirrus / cirrus épais | glace, selon l’épaisseur optique |
-| Clair / inconnu | ciel clair ou retrieval impossible |
+| Fog / very low | Cloud top below 1 km |
+| Low | St / Sc / Cu |
+| Mid | Ac / As |
+| Mixed phase | Water and ice |
+| High opaque | Cs / Ns |
+| Very high / convective | Cb |
+| Cirrus (very thin / thin / thick) | Ice, split by optical depth |
+| Clear / unknown | Clear sky or failed retrieval |
 
-Ce n’est **pas** la taxonomie WMO complète (un cumulus vs un stratus). GOES/Meteosat donnent l’étage + la phase, pas la forme du nuage.
+This is an altitude and phase taxonomy derived from GOES/Meteosat products, not the full WMO cloud atlas (shape is not labeled).
 
 <p align="center">
-  <img src="docs/screenshots/europe-brut.png" alt="Meteosat Europe brut" width="32%">
-  <img src="docs/screenshots/europe-semantic.png" alt="Masque semantique" width="32%">
+  <img src="docs/screenshots/europe-brut.png" alt="Meteosat Europe raw" width="32%">
+  <img src="docs/screenshots/europe-semantic.png" alt="Semantic mask" width="32%">
   <img src="docs/screenshots/europe-instances.png" alt="Instances" width="32%">
 </p>
 
-## Pourquoi pas du 30 m toutes les 10 min
+## Resolution
 
-**95-Cloud** = Landsat 8, **30 m**, patches **384×384** (~11,5 km). Revisit : plusieurs jours.
+**95-Cloud** is Landsat-8 at **30 m** (384×384 patches, ~11.5 km) with a multi-day revisit. Geostationary live imagery (Meteosat / GOES) is **0.5–2 km** every **2.5–15 min**. No public satellite provides both.
 
-Le live géostationnaire (Meteosat / GOES) = **0,5–2 km**, **2,5–15 min**. Aucun satellite public ne combine les deux. Le dashboard sert à la cinétique ; Landsat/Sentinel restent la haute résolution.
+A binary RF-DETR-Seg trained on 38/95-Cloud does not transfer to geostationary RGB because of the domain gap. That pipeline remains in the repository for reference only.
 
-Un premier essai RF-DETR-Seg sur 38/95-Cloud (binaire, instances Landsat) ne se transfère pas au live : écart de domaine trop fort.
+## Install
 
-## Installation
-
-```powershell
+```bash
 git clone https://github.com/Thorfy/unet-cloud-classification-segmentation-rt.git
 cd unet-cloud-classification-segmentation-rt
 python -m venv .venv
+```
+
+Windows:
+
+```powershell
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-PyTorch CUDA : installer la wheel CUDA correspondant à ta carte, par exemple :
+Linux / macOS:
 
-```powershell
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Optional CUDA build of PyTorch:
+
+```bash
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 ```
 
 ## Dashboard
 
-```powershell
+```bash
 streamlit run app/streamlit_app.py
 ```
 
-Ouvre [http://127.0.0.1:8501](http://127.0.0.1:8501). Source par défaut : **Meteosat Europe** (visible le jour, infrared la nuit).
+Default source is Meteosat Europe (visible by day, infrared at night). Checkpoints are loaded from `runs/unet-cloud-types-europe/best.pt` when present. Weights are not stored in Git.
 
-Les poids locaux `runs/unet-cloud-types-europe/best.pt` sont chargés s’ils existent. Ils ne sont **pas** dans Git (trop lourds).
-
-### Sources live
-
-| id | flux | cadence |
+| Source | Stream | Cadence |
 |---|---|---|
 | `europe` | MET Norway Meteosat Europe, visible / IR auto | ~15 min |
 | `europe-visible` | MET Norway visible | ~15 min |
 | `europe-ir` | MET Norway infrared | ~15 min |
-| `meteosat-europe` | CIRA SLIDER GeoColor, crop Europe | variable |
-| `meteosat-disk` | CIRA SLIDER GeoColor disque | ~15 min |
-| `goes-19-cmi` | NOAA GOES-19 ABI CMI CONUS (même domaine que l’entraînement) | ~5–10 min |
+| `meteosat-europe` | CIRA SLIDER GeoColor, Europe crop | variable |
+| `meteosat-disk` | CIRA SLIDER GeoColor disk | ~15 min |
+| `goes-19-cmi` | NOAA GOES-19 ABI CMI CONUS | ~5–10 min |
 | `goes-19` | CIRA SLIDER GOES-19 GeoColor | ~10 min |
 | `goes-19-star` | NOAA STAR GeoColor full disk | ~10 min |
 
-## Entraînement (U-Net types)
+## Training
 
-Télécharge des paires GOES-19 publics (AWS NOAA, sans clé) : MCMIP + ACTP + COD + ACHA.
+Public GOES-19 pairs from NOAA AWS (MCMIP, ACTP, COD, ACHA):
 
-```powershell
+```bash
 python scripts/download_goes_types.py --max-scenes 24 --days 10
 python -c "from src.ingest.goes_aws import download_acha_for_existing; print(len(download_acha_for_existing()))"
 python scripts/prepare_goes_seg.py
@@ -90,43 +94,39 @@ python scripts/train_cloud_types.py --epochs 20 --batch-size 8
 python scripts/finetune_europe.py --max-images 36 --epochs 10
 ```
 
-Checkpoints :
+| Checkpoint | Domain |
+|---|---|
+| `runs/unet-cloud-types/best.pt` | GOES CONUS |
+| `runs/unet-cloud-types-europe/best.pt` | Meteosat Europe fine-tune |
 
-- `runs/unet-cloud-types/best.pt` — GOES CONUS
-- `runs/unet-cloud-types-europe/best.pt` — fine-tune Meteosat Europe
+## Legacy pipeline (38-Cloud / 95-Cloud + RF-DETR)
 
-## Pipeline historique (38-Cloud / 95-Cloud + RF-DETR)
-
-Toujours dans le dépôt, plus utilisé par le dashboard.
-
-```powershell
+```bash
 python scripts/download_datasets.py
 python scripts/prepare_coco.py --max-train 0
 python scripts/train_rfdetr.py --epochs 20
 ```
 
-- [38-Cloud](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) / [95-Cloud](https://github.com/SorourMo/95-Cloud-An-Extension-to-38-Cloud-Dataset)
-- Kaggle : jeton dans `%USERPROFILE%\.kaggle\kaggle.json`
-- Sans jeton : miroirs Hugging Face (`jaygala223/38-cloud-dataset`, `jaygala223/95-cloud-train-only-v1`)
+Datasets: [38-Cloud](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset), [95-Cloud](https://github.com/SorourMo/95-Cloud-An-Extension-to-38-Cloud-Dataset). Optional Kaggle token at `%USERPROFILE%\.kaggle\kaggle.json` (Windows) or `~/.kaggle/kaggle.json`. Hugging Face mirrors: `jaygala223/38-cloud-dataset`, `jaygala223/95-cloud-train-only-v1`.
 
-## Structure
+## Layout
 
 ```
-app/streamlit_app.py          dashboard
-src/unet.py                   U-Net
-src/cloud_types.py            taxonomie 11 classes
-src/infer_types.py            inference
-src/instances.py              instances (composantes connexes)
-src/ingest/                   MET Norway, SLIDER, GOES AWS, STAR
-scripts/                      download / prepare / train / finetune
-docs/screenshots/             captures du dashboard
-data/                         ignore (datasets locaux)
-runs/                         ignore (poids)
+app/streamlit_app.py    live dashboard
+src/unet.py             U-Net
+src/cloud_types.py      11-class taxonomy
+src/infer_types.py      inference
+src/instances.py        connected-component instances
+src/ingest/             MET Norway, SLIDER, GOES AWS, STAR
+scripts/                download, prepare, train, fine-tune
+docs/screenshots/       dashboard captures
+data/                   local datasets (gitignored)
+runs/                   checkpoints (gitignored)
 ```
 
-## Licence des données
+## Data licenses
 
-- Images live MET Norway : conditions [api.met.no](https://api.met.no/)
-- GOES-19 L2 : NOAA, domaine public
-- 38/95-Cloud : voir les dépôts SorourMo
-- CIRA SLIDER : usage selon CIRA / RAMMB
+- MET Norway live imagery: [api.met.no](https://api.met.no/)
+- GOES-19 L2: NOAA, public domain
+- 38/95-Cloud: see the SorourMo repositories
+- CIRA SLIDER: CIRA / RAMMB terms
