@@ -4,6 +4,21 @@ Near-real-time cloud type classification and semantic segmentation on **Meteosat
 
 A compact U-Net is trained on official GOES-19 products (CMI truecolor, ACTP phase, COD optical depth, ACHA height), then fine-tuned on [MET Norway](https://api.met.no/weatherapi/geosatellite/1.4/documentation) Meteosat Europe imagery. Instance boxes are connected components per class, not a separate object detector.
 
+## Do you need this?
+
+**Mostly for Europe.** The free live APIs used here do **not** return cloud types. On GOES, NOAA already publishes the same information, usually better.
+
+| Region | What the public API gives | What the model adds |
+|---|---|---|
+| **Europe** (MET Norway geosatellite 1.4, CIRA SLIDER) | A PNG only (visible or infrared). No phase, height, optical depth, or type. | A type map + instances from that picture. |
+| **GOES-19 CONUS** (NOAA AWS) | Official L2: **ACTP** (phase), **COD** (optical depth), **ACHA** (height). | Little. The U-Net is a student of those products from RGB only. Prefer the NetCDFs if you need accuracy. |
+
+Official Meteosat cloud types exist (**NWC SAF Cloud Type**) but are **not** in the MET Norway API (EUMETSAT / NWC SAF access). Without that, this model is a visualization stand-in, not new meteorology.
+
+Scene class (clear / partly / cloudy) is just the mask fraction. Instances are connected components. Neither is a new retrieval.
+
+If the goal is scientific GOES analysis, skip this repo and read ACTP + COD + ACHA. If the goal is a live Europe overlay from a free image API, this is the part that is not already provided.
+
 <p align="center">
   <img src="docs/screenshots/dashboard-europe-instances.png" alt="Live Europe dashboard" width="100%">
 </p>
