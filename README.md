@@ -4,6 +4,9 @@ Near-real-time cloud type classification and semantic segmentation on **Meteosat
 
 A compact U-Net is trained on official GOES-19 products (CMI truecolor, ACTP phase, COD optical depth, ACHA height), then fine-tuned on [MET Norway](https://api.met.no/weatherapi/geosatellite/1.4/documentation) Meteosat Europe imagery. Instance boxes are connected components per class, not a separate object detector.
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/0128ff65-55ab-4137-a15e-3c749a9d6f07" />
+
+
 ## Do you need this?
 
 **Mostly for Europe.** The free live APIs used here do **not** return cloud types. On GOES, NOAA already publishes the same information, usually better.
